@@ -2,6 +2,8 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <climits>
+
 using namespace std;
 
 const int MAXN = 15; // Limite do tamanho de n
@@ -13,6 +15,7 @@ string trace[MAXN][MAXN]; // Rastreamento para parentetização
 // Função para calcular todas as combinações possíveis
 void solve(vector<int> &seq, int result) {
     int m = seq.size();
+    
     // Inicializar DP para subcadeias de tamanho 1
     for (int i = 0; i < m; i++) {
         dp[i][i].insert(seq[i]);
@@ -26,10 +29,11 @@ void solve(vector<int> &seq, int result) {
             for (int k = i; k < j; k++) {
                 for (int x : dp[i][k]) {
                     for (int y : dp[k+1][j]) {
-                        int res = T[x][y];
+                        int res = T[x][y]; // Operação entre x e y
                         dp[i][j].insert(res);
+                        // Atualizar trace se encontrou o resultado desejado
                         if (trace[i][j].empty() || res == result) {
-                            trace[i][j] = "(" + trace[i][k] + "  " + trace[k+1][j] + ")";
+                            trace[i][j] = "(" + trace[i][k] + " " + trace[k+1][j] + ")";
                         }
                     }
                 }
