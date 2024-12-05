@@ -1,104 +1,69 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <sstream>
-#include <limits.h>
+#include <set>
+#include <string>
+using namespace std;
 
-int _n, _m, _res;
-std::vector<std::vector<int>> _matrix;
-std::vector<int> _sequence;
+const int MAXN = 15; // Limite do tamanho de n
 
-void parser() {
-    int num;
-    std::string line;
+int T[MAXN][MAXN]; // Tabela da operação ⊕
+set<int> dp[MAXN][MAXN]; // DP para armazenar resultados possíveis
+string trace[MAXN][MAXN]; // Rastreamento para parentetização
 
-    std::getline(std::cin, line);
-    std::istringstream iss(line);
-
-    // set the values for _n and _m
-    iss >> _n >> _m;
-
-    // read the matrix
-    for (int i = 0; i < _n; i++) {
-        std::vector<int> _matrixLine;
-        std::getline(std::cin, line);
-        std::istringstream issMatrix(line);
-        while (issMatrix >> num) {
-            _matrixLine.push_back(num);
-        }
-        _matrix.push_back(_matrixLine);
+// Função para calcular todas as combinações possíveis
+void solve(vector<int> &seq, int result) {
+    int m = seq.size();
+    // Inicializar DP para subcadeias de tamanho 1
+    for (int i = 0; i < m; i++) {
+        dp[i][i].insert(seq[i]);
+        trace[i][i] = to_string(seq[i]);
     }
 
-    // read the sequence
-    std::getline(std::cin, line);
-    std::istringstream issSequence(line);
-    while (issSequence >> num) {
-        _sequence.push_back(num);
-    }
-
-    // read the result
-    std::getline(std::cin, line);
-    std::istringstream issResult(line);
-    issResult >> _res;
-}
-
-void rebuildParentization(int i, int j, const std::vector<std::vector<int>>& parent) {
-    if (i == j) {
-        std::cout << _sequence[i];
-        return;
-    }
-
-    int k = parent[i][j];
-    std::cout << "(";
-    rebuildParentization(i, k, parent);
-    std::cout << " ";
-    rebuildParentization(k + 1, j, parent);
-    std::cout << ")";
-}
-
-int parentization() {
-    std::vector<std::vector<int>> dp(_m, std::vector<int>(_m, -1)); // DP table to store results
-    std::vector<std::vector<int>> parent(_m, std::vector<int>(_m, -1)); // Parent table for reconstruction
-
-    // Precompute the base cases for subsequences of length 1
-    for (int i = 0; i < _m; i++) {
-        dp[i][i] = _sequence[i];
-    }
-
-    // Start filling the DP table for subsequences of length >= 2
-    for (int len = 2; len <= _m; len++) {
-        for (int i = 0; i <= _m - len; i++) {
+    // Preencher DP para subcadeias maiores
+    for (int len = 2; len <= m; len++) { // Tamanho da subcadeia
+        for (int i = 0; i <= m - len; i++) {
             int j = i + len - 1;
-            int minResult = INT_MAX;
-            int bestK = -1;
-            
-            // Try every possible split (k)
             for (int k = i; k < j; k++) {
-                int result = _matrix[dp[i][k] - 1][dp[k + 1][j] - 1];
-                if (result < minResult) {
-                    minResult = result;
-                    bestK = k;
+                for (int x : dp[i][k]) {
+                    for (int y : dp[k+1][j]) {
+                        int res = T[x][y];
+                        dp[i][j].insert(res);
+                        if (trace[i][j].empty() || res == result) {
+                            trace[i][j] = "(" + trace[i][k] + "  " + trace[k+1][j] + ")";
+                        }
+                    }
                 }
             }
-
-            dp[i][j] = minResult;
-            parent[i][j] = bestK;
         }
     }
 
-    // If the result in dp[0][m-1] matches the desired result, reconstruct the parenthesis
-    if (dp[0][_m - 1] == _res) {
-        std::cout << 1 << std::endl;
-        rebuildParentization(0, _m - 1, parent);
-        std::cout << std::endl;
-        return 1;
+    // Verificar resultado final
+    if (dp[0][m-1].count(result)) {
+        cout << "1\n" << trace[0][m-1] << endl;
+    } else {
+        cout << "0\n";
     }
-
-    std::cout << 0 << std::endl;
-    return 0;
 }
 
 int main() {
-    parser();
-    return parentization();
+    int n, m;
+    cin >> n >> m;
+
+    // Ler tabela T
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            cin >> T[i][j];
+        }
+    }
+
+    // Ler sequência e resultado desejado
+    vector<int> seq(m);
+    for (int i = 0; i < m; i++) cin >> seq[i];
+    int result;
+    cin >> result;
+
+    // Resolver o problema
+    solve(seq, result);
+
+    return 0;
 }
